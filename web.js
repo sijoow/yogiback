@@ -9,13 +9,13 @@ app.use(express.json());
 
 let db;
 
-MongoClient.connect('mongodb+srv://yogibo:yogibo@cluster0.vvkyawf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', function(err, client) {
+MongoClient.connect('#', function(err, client) {
     if (err) return console.log(err);
     db = client.db('todoapp');
     console.log('MongoDB에 연결되었습니다.');
     // 매일 자정에 실행될 작업을 스케줄링합니다.
-    cron.schedule('0 0 * * *', function() {
-        const currentDate = new Date().toISOString().slice(0, 10);
+    cron.schedule('0 15 * * *', function() {
+        const currentDate = new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}).slice(0, 10);
         const collection = db.collection('attend');
 
         // 모든 사용자의 출석체크 상태를 조회하고 초기화합니다.
@@ -29,7 +29,7 @@ MongoClient.connect('mongodb+srv://yogibo:yogibo@cluster0.vvkyawf.mongodb.net/?r
 
 app.post('/attend', (req, res) => {
     const { memberId } = req.body;
-    const currentDate = new Date().toISOString().slice(0, 10);
+    const currentDate = new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}).slice(0, 10);
     const collection = db.collection('attend');
 
     // 해당 memberId의 최근 출석체크 데이터를 조회합니다.
@@ -61,8 +61,8 @@ app.post('/attend', (req, res) => {
 
 app.get('/attendance-status/:memberId', (req, res) => {
     const memberId = req.params.memberId;
-    const currentDate = new Date().toISOString().slice(0, 10);
-    const previousDate = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const currentDate = new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}).slice(0, 10);
+    const previousDate = new Date(Date.now() - 86400000).toLocaleString("en-US", {timeZone: "Asia/Seoul"}).slice(0, 10);
     const collection = db.collection('attend');
 
     // 해당 memberId의 출석체크 상태를 조회합니다.
