@@ -26,7 +26,6 @@ MongoClient.connect('mongodb+srv://yogibo:yogibo@cluster0.vvkyawf.mongodb.net/?r
         });
     });
 });
-
 app.post('/attend', (req, res) => {
     const { memberId } = req.body;
     const currentDate = new Date().toISOString().slice(0, 10);
@@ -39,23 +38,23 @@ app.post('/attend', (req, res) => {
             return res.status(500).json({ error: 'Server error occurred while checking attendance.' });
         }
 
+        // 이미 오늘의 출석체크가 완료된 경우, 출석체크 요청을 거부합니다.
         if (existingAttendance && existingAttendance.date === currentDate) {
-            console.log('User has already attended.');
-            return res.status(400).json({ message: 'User has already attended.', alreadyAttended: true });
-        } else {
-            const newAttendanceCount = existingAttendance ? existingAttendance.attendanceCounter + 1 : 1;
-
-            // 출석체크 데이터를 업데이트합니다. 기존 데이터가 없으면 새로운 데이터를 생성합니다.
-            collection.updateOne({ memberId }, { $set: { date: currentDate, attendanceCounter: newAttendanceCount } }, { upsert: true }, (err, result) => {
-                if (err) {
-                    console.error('Error saving attendance record:', err);
-                    return res.status(500).json({ error: 'Failed to save attendance.' });
-                } else {
-                    console.log('Attendance record saved.');
-                    res.json({ message: 'Attendance completed.', consecutiveAttendance: newAttendanceCount, attendanceCounter: newAttendanceCount });
-                }
-            });
+            console.log('User has already attended today.');
+            return res.status(400).json({ message: 'You have already attended today.', alreadyAttended: true });
         }
+
+        // 출석체크 데이터를 업데이트합니다. 기존 데이터가 없으면 새로운 데이터를 생성합니다.
+        const newAttendanceCount = existingAttendance ? existingAttendance.attendanceCounter + 1 : 1;
+        collection.updateOne({ memberId }, { $set: { date: currentDate, attendanceCounter: newAttendanceCount } }, { upsert: true }, (err, result) => {
+            if (err) {
+                console.error('Error saving attendance record:', err);
+                return res.status(500).json({ error: 'Failed to save attendance.' });
+            } else {
+                console.log('Attendance record saved.');
+                res.json({ message: 'Attendance completed.', consecutiveAttendance: newAttendanceCount });
+            }
+        });
     });
 });
 
