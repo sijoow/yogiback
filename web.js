@@ -13,16 +13,15 @@ MongoClient.connect('mongodb+srv://admin:admin@cluster0.unz3ui3.mongodb.net/foru
     if (err) return console.log(err);
     db = client.db('todoapp');
     console.log('MongoDB에 연결되었습니다.');
-    // 매일 자정에 실행될 작업을 스케줄링합니다.
+    
     cron.schedule('0 15 * * *', function() {
         const currentDate = new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}).slice(0, 10);
+        const previousDate = new Date(Date.now() - 86400000).toLocaleString("en-US", {timeZone: "Asia/Seoul"}).slice(0, 10);
         const collection = db.collection('attend');
 
-        // 모든 사용자의 출석체크 상태를 조회하고 초기화합니다.
-        collection.find().forEach((doc) => {
-            if (doc.date !== currentDate) {
-                collection.updateOne({ memberId: doc.memberId }, { $set: { attendanceCounter: 0 } });
-            }
+        // 이전 날짜에 출석체크를 하지 않은 사용자를 찾아서 초기화합니다.
+        collection.find({ date: { $ne: previousDate } }).forEach((doc) => {
+            collection.updateOne({ memberId: doc.memberId }, { $set: { attendanceCounter: 0 } });
         });
     });
 });
