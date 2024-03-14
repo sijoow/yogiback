@@ -93,6 +93,36 @@ app.get('/attendance-status/:memberId', (req, res) => {
     });
 });
 
+app.post('/update-attendance', (req, res) => {
+    const { memberId } = req.body;
+    const currentDate = new Date().toLocaleString("en-US", {timeZone: "Asia/Seoul"}).slice(0, 10);
+    const collection = db.collection('attend');
+
+    // 해당 memberId의 출석체크 데이터를 조회합니다.
+    collection.findOne({ memberId }, (err, existingAttendance) => {
+        if (err) {
+            console.error('Error finding attendance:', err);
+            return res.status(500).json({ error: 'Server error occurred while checking attendance.' });
+        }
+
+        if (existingAttendance) {
+            // 출석체크 데이터를 갱신하여 다음 날에 초기화될 수 있도록 합니다.
+            collection.updateOne({ memberId }, { $set: { date: currentDate, attendanceCounter: 0 } }, (err, result) => {
+                if (err) {
+                    console.error('Error updating attendance record:', err);
+                    return res.status(500).json({ error: 'Failed to update attendance record.' });
+                } else {
+                    console.log('Attendance record updated.');
+                    res.json({ message: 'Attendance record updated.' });
+                }
+            });
+        } else {
+            console.error('No attendance record found for the member:', memberId);
+            return res.status(404).json({ error: 'No attendance record found for the member.' });
+        }
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
 });
