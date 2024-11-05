@@ -1,12 +1,253 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    123
-    
-</body>
-</html>
+<style type="text/css">
+    #attend_event {margin:0 auto;width:1600px;}
+    #attend_event img {width:100%;}
+    .attend_choice {cursor:pointer;margin-top:-20px;}
+    .attend_point {position:relative;display:inline-block;}
+    .attend_point ul {width:60%;margin:0 auto;
+	position:absolute;top:0;
+	left: 20%;
+	transform: translate(-0%, -20%);	
+	}
+
+	.day1{ 
+		position: absolute;
+		top: 38px;
+		width: 260px;
+		left: 64px;
+	}
+	.day2{
+		position: absolute;
+		top: 38px;
+		width: 260px;
+		left: 357px;
+	}
+	 .day3{
+		position: absolute;
+		top: 38px;
+		width: 260px;
+		left: 643px;
+	 }
+
+	 
+	 .attend_point ul li img{width:100%;}
+	#coupon_download{
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		 width: 500px; 
+		  height: 200px; 
+		  background-color:#17adc6; 
+		  border: 8px solid #333;
+		  border-radius: 10px; 
+		  display: flex; 
+		  justify-content: center; 
+		  align-items: center; /
+		  font-size: 30px;
+		  font-weight: bold;
+		  color: #333; 
+		  text-align: center;
+		cursor:pointer;
+	}
+	#coupon_wrapper{
+	width:100%;height:100vh;
+	background:#3333336e;position:fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display:none
+
+	}
+	#coupon_download ul li{width:100%;color:#fff;}
+	#coupon_download ul li:nth-child(1){color:#fff;font-size:25px;font-weight:400;}
+	#coupon_download ul li:nth-child(2){font-size:40px;font-weight:600;margin-top:10px;}
+	#coupon_download ul li:nth-child(3){font-size:13px;font-weight:400;margin-top:10px;}
+
+.coupon_closed {
+    position: absolute;
+    top: -39px;
+    right: -28px;
+    border: 4px solid #111;
+    padding: 8px;
+    padding-left: 18px;
+    padding-right: 18px;
+    border-radius: 100%;
+    background: #fff;
+    font-size: 29px;
+    font-weight: 600;
+    z-index: 9999;
+}
+
+.attend_choice2{margin-top:-20px;display:none}
+.swal2-styled.swal2-confirm {
+    border: 0;
+    border-radius: 0.25em;
+    background: initial;
+    background-color: #16aec4;
+    color: #fff;
+    font-size: 1em;
+}
+
+
+</style>
+
+
+<div id="attend_event">
+    <div><img src="/web/img/event/attend/0227/web_01.jpg" alt=""/></div>
+    <div class="attend_point">
+        <img src="/web/img/event/attend/0227/web_02.jpg" alt=""/>
+        <ul id="attendanceList">
+            <!-- 이 부분은 JavaScript 코드에서 동적으로 생성됩니다. -->
+        </ul>
+    </div>
+    <div class="attend_choice" onclick="attendbar()"><img src="/web/img/event/attend/0227/web_03.jpg" alt=""/></div>
+	<a href="https://yogibo.kr/exec/front/newcoupon/IssueDownload?coupon_no=6078322617400000403">
+	<div class="attend_choice2"><img src="/web/img/event/attend/0227/web_03_03.jpg" alt=""></div>
+	</a>
+    <div><img src="/web/img/event/attend/0227/web_04.jpg" alt=""/></div>
+	<div id="coupon_wrapper">		
+		<div id="coupon_download">
+			<div class="coupon_closed">X</div>
+			<ul class="">
+				<li>소파 제품 구매시</li>
+				<li>10,000원 쿠폰 발급 받기</li>
+				<li>※지급된 쿠폰의 유효 기간은 발급일로부터 1일 입니다.</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+
+ <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script language="javascript" type="text/javascript">
+
+
+    // 출석체크 요소를 표시하는 함수
+    function showAttendanceElements(consecutiveAttendance) {
+        const attendanceList = document.getElementById('attendanceList');
+
+        // 기존 도장 요소 모두 제거
+        attendanceList.innerHTML = '';
+
+        // 새로운 도장 요소 추가
+        for (let i = 1; i <= parseInt(consecutiveAttendance); i++) {
+            const newAttendanceElement = document.createElement('li');
+            newAttendanceElement.className = `day${i}`;
+            newAttendanceElement.innerHTML = `<img src="/web/img/event/attend/0227/day${i}.png" alt=""/>`;
+            attendanceList.appendChild(newAttendanceElement);
+        }
+    }
+
+    function attendbar() {
+        // 고객 아이디를 가져오는 함수
+        CAFE24API.getCustomerIDInfo(function(err, res) {
+            if (err || !res || !res.id || !res.id.member_id) {
+				alert("로그인 후 참여가 가능합니다.");
+				window.location.href = '/member/login.html'; // 로그인 페이지로 이동
+				return;
+            }
+
+            const memberId = res.id.member_id;
+
+            // 출석체크 요청
+            axios.post('https://port-0-yogiback-am952nltee6yr6.sel5.cloudtype.app/attend', { memberId })
+                .then(response => {
+                    const newAttendanceCount = response.data.consecutiveAttendance;
+                    const hasFailed = response.data.hasFailed;
+                    showAttendanceElements(newAttendanceCount);
+
+                    if (hasFailed) {
+                        // 출석체크 실패
+                        alert('연속 출석체크 실패 😢 실망하지 마세요, 오늘부터 다시 도전할 수 있어요!');
+                        location.reload(); // 페이지 새로고침
+                    } else {
+                        // 출석체크 성공
+                        alert("출석 완료!");
+                    }
+
+                    // 3회차 출석체크 완료시 쿠폰 발급
+                    if (newAttendanceCount >= 3) {
+                        document.getElementById('coupon_wrapper').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('당일 이벤트 참여 완료 하였습니다.');
+                });
+        });
+    }
+
+    window.onload = function(event) {
+        // 고객 아이디를 가져오는 함수
+        CAFE24API.getCustomerIDInfo(function(err, res) {
+            if (!err && res && res.id && res.id.member_id) {
+                const memberId = res.id.member_id;
+
+
+				document.getElementById('coupon_download').addEventListener('click', function() {
+				// 서버에 출석체크 완료 신호를 보냅니다.
+				axios.post('https://port-0-yogiback-am952nltee6yr6.sel5.cloudtype.app/update-attendance', { memberId: memberId })
+					.then(response => {
+						// 성공적으로 신호를 보낸 경우, 쿠폰을 다운로드 받습니다.
+						window.location.href = 'https://yogibo.kr/exec/front/newcoupon/IssueDownload?coupon_no=6078322617400000403';
+					})
+					.catch(error => {
+						console.error('Error:', error);
+						alert('쿠폰을 다운로드하는 데 문제가 발생했습니다.');
+					});
+				});
+
+                // 출석체크 상태를 가져오는 요청
+                axios.get(`https://port-0-yogiback-am952nltee6yr6.sel5.cloudtype.app/attendance-status/${memberId}`)
+				.then(response => {
+						const consecutiveAttendance = parseInt(response.data.consecutiveAttendance);
+						const hasFailed = response.data.hasFailed;
+						console.log('멤버아이디:', memberId); // 콘솔에 출력
+						console.log('출석체크:', consecutiveAttendance); // 콘솔에 출력
+						showAttendanceElements(consecutiveAttendance);
+
+						// 3회차 출석체크 완료시 쿠폰 발급
+						if (consecutiveAttendance >= 3) {
+							 document.getElementById('coupon_wrapper').style.display = 'block';
+						}
+
+						// 출석체크를 한 적이 있고, 연속 출석체크 실패 시
+						if (hasFailed) {
+							alert('연속 출석체크 실패 😢 실망하지 마세요, 오늘부터 다시 도전할 수 있어요!');
+						}
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        //alert('');
+                    });
+            } else {
+                //alert("로그인 후 참여가 가능합니다.");
+            }
+        });
+    };
+</script>
+<script language="javascript" type="text/javascript">
+//3회차 출석 완료시 
+document.querySelector('.coupon_closed').addEventListener('click', function() {
+	document.querySelector('#coupon_wrapper').style.display = 'none';
+	document.querySelector('.attend_choice').style.display = 'none';
+	document.querySelector('.attend_choice2').style.display = 'block';
+});
+</script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+  // alert() 함수 오버라이드
+  window.alert = function(message) {
+    Swal.fire({
+      title: '출석체크',
+      text: message,
+     // icon: 'info',
+      confirmButtonText: '확인'
+    });
+  }
+</script>
+
+
